@@ -37,7 +37,7 @@ func main() {
 
 	content, err := os.ReadFile(os.Getenv("MESSAGE_TEMPLATE_PATH"))
 	if err != nil {
-		log.Print("Error loading template or template not found:", err)
+		log.Print("Error loading template or template not found: ", err)
 		template = "Obsidian Reminder\n{{datetime}}\n\n{{message}}"
 	} else {
 		template = string(content)
@@ -88,7 +88,7 @@ func processMarkdownFile(path string) error {
 			if date, err := time.ParseInLocation("2006-01-02 15:04", dateStr, timezone); err == nil {
 				now := time.Now()
 				if date.After(now.Add(-5*time.Minute)) && date.Before(time.Now().In(timezone)) {
-					log.Print("Found reminder in markdown with path:", path)
+					log.Print("Found reminder in markdown with path: ", path)
 					sendTelegramReminder(date, line)
 				}
 			}
