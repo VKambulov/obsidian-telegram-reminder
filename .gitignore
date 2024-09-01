@@ -1,4 +1,5 @@
 .idea
+dist/
 *.iml
 .env
 app.log
