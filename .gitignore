@@ -1,0 +1,6 @@
+.idea
+*.iml
+.env
+app.log
+obsidian-telegram-reminder
+obsidian-telegram-reminder.exe
