@@ -38,7 +38,7 @@ func main() {
 	content, err := os.ReadFile(os.Getenv("MESSAGE_TEMPLATE_PATH"))
 	if err != nil {
 		log.Print("Error loading template or template not found: ", err)
-		template = "Obsidian Reminder\n{{datetime}}\n\n{{message}}"
+		template = "Obsidian Reminder\n{{filename}}\n{{datetime}}\n\n{{message}}"
 	} else {
 		template = string(content)
 	}
@@ -89,7 +89,7 @@ func processMarkdownFile(path string) error {
 				now := time.Now()
 				if date.After(now.Add(-5*time.Minute)) && date.Before(time.Now().In(timezone)) {
 					log.Print("Found reminder in markdown with path: ", path)
-					sendTelegramReminder(date, line)
+					sendTelegramReminder(date, line, strings.TrimSuffix(filepath.Base(path), filepath.Ext(path)))
 				}
 			}
 		}
@@ -97,7 +97,7 @@ func processMarkdownFile(path string) error {
 	return nil
 }
 
-func sendTelegramReminder(date time.Time, message string) {
+func sendTelegramReminder(date time.Time, message string, filename string) {
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
 	if err != nil {
 		log.Fatal("Error creating Telegram bot:", err)
@@ -111,6 +111,7 @@ func sendTelegramReminder(date time.Time, message string) {
 	datetime := date.Format("2006-01-02 15:04")
 
 	reminderMessage := strings.ReplaceAll(template, "{{datetime}}", datetime)
+	reminderMessage = strings.ReplaceAll(reminderMessage, "{{filename}}", filename)
 	reminderMessage = strings.ReplaceAll(reminderMessage, "{{message}}", message)
 
 	msg := tgbotapi.NewMessage(int64(chatId), reminderMessage)
