@@ -16,7 +16,7 @@ import (
 var timezone *time.Location
 var template string
 
-var dateRegex = regexp.MustCompile(`@(\d{4}-\d{2}-\d{2} \d{2}:\d{2})`)
+var dateRegex = regexp.MustCompile(`@(\d{4}-\d{2}-\d{2} \d{2}:\d{2}|\d{4}-\d{2}-\d{2})`)
 
 func main() {
 	file, err := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
@@ -76,6 +76,16 @@ func processMarkdownFile(path string) error {
 	for _, line := range lines {
 		if matches := dateRegex.FindStringSubmatch(line); matches != nil {
 			dateStr := matches[1]
+
+			if !strings.Contains(dateStr, ":") {
+				remindTime := os.Getenv("REMIND_TIME")
+
+				if remindTime == "" {
+					remindTime = "09:00"
+				}
+
+				dateStr = dateStr + " " + remindTime
+			}
 
 			if date, err := time.ParseInLocation("2006-01-02 15:04", dateStr, timezone); err == nil {
 				now := time.Now()
