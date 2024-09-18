@@ -46,14 +46,6 @@ func main() {
 	checkMarkdownFiles()
 }
 
-func loadTemplate(path string) (string, error) {
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
-	return string(content), nil
-}
-
 func checkMarkdownFiles() {
 	err := filepath.Walk(
 		os.Getenv("OBSIDIAN_VAULT_PATH"),
