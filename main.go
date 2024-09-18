@@ -81,15 +81,16 @@ func processMarkdownFile(path string) error {
 				now := time.Now()
 				if date.After(now.Add(-5*time.Minute)) && date.Before(time.Now().In(timezone)) {
 					log.Print("Found reminder in markdown with path: ", path)
-					sendTelegramReminder(date, line, strings.TrimSuffix(filepath.Base(path), filepath.Ext(path)))
+					sendTelegramReminder(date, line, path)
 				}
 			}
 		}
 	}
+
 	return nil
 }
 
-func sendTelegramReminder(date time.Time, message string, filename string) {
+func sendTelegramReminder(date time.Time, message string, path string) {
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
 	if err != nil {
 		log.Fatal("Error creating Telegram bot:", err)
@@ -103,7 +104,7 @@ func sendTelegramReminder(date time.Time, message string, filename string) {
 	datetime := date.Format("2006-01-02 15:04")
 
 	reminderMessage := strings.ReplaceAll(template, "{{datetime}}", datetime)
-	reminderMessage = strings.ReplaceAll(reminderMessage, "{{filename}}", filename)
+	reminderMessage = strings.ReplaceAll(reminderMessage, "{{filename}}", strings.TrimSuffix(filepath.Base(path), filepath.Ext(path)))
 	reminderMessage = strings.ReplaceAll(reminderMessage, "{{message}}", message)
 
 	msg := tgbotapi.NewMessage(int64(chatId), reminderMessage)
