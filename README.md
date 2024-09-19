@@ -19,6 +19,11 @@ or if you have a PC that will run continuously, you may use this service.
 The service checks your vault every 5 minutes using a cron scheduler task and looks for this patterns
 in markdown files: `@2024-09-01 13:00`, `@2024-09-01`.
 
+You can also set up recurring reminders using the template `@20XX-XX-XX XX:XX`. For example,
+to create a reminder that repeats every year on September 1st at 20:00, you can use the
+following template: `@20XX-09-01 20:00`. For reminders every hour at 00 minutes on September 19,
+2024, use the following template: `@2024-09-19 XX:00`. And so on, following the example.
+
 ## Quick start
 
 1. Download the latest release for your OS.
