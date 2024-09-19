@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -13,10 +14,11 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var timezone *time.Location
-var template string
-
-var dateRegex = regexp.MustCompile(`@(\d{4}-\d{2}-\d{2} \d{2}:\d{2}|\d{4}-\d{2}-\d{2})`)
+var (
+	dateRegex = regexp.MustCompile(`@(((\d{4}|20XX)-(XX|\d{2})-(XX|\d{2}) (XX|\d{2}):(XX|\d{2}))|((\d{4}|20XX)-(XX|\d{2})-(XX|\d{2})))`)
+	timezone  *time.Location
+	template  string
+)
 
 func main() {
 	file, err := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
@@ -65,6 +67,50 @@ func checkMarkdownFiles() {
 	}
 }
 
+func getNextDate(dateStr string, now time.Time) time.Time {
+	var date time.Time
+
+	if !strings.Contains(dateStr, ":") {
+		remindTime := os.Getenv("REMIND_TIME")
+
+		if remindTime == "" {
+			remindTime = "09:00"
+		}
+
+		dateStr = dateStr + " " + remindTime
+	}
+
+	if strings.Contains(dateStr, "XX") {
+		if strings.Contains(dateStr, "20XX") {
+			dateStr = strings.Replace(dateStr, "20XX", strconv.Itoa(now.Year()), 1)
+		}
+
+		if strings.Contains(dateStr, "-XX-") {
+			dateStr = strings.Replace(dateStr, "-XX-", "-"+fmt.Sprintf("%02d", int(now.Month()))+"-", 1)
+		}
+
+		if strings.Contains(dateStr, "-XX") {
+			dateStr = strings.Replace(dateStr, "-XX", "-"+fmt.Sprintf("%02d", now.Day()), 1)
+		}
+
+		if strings.Contains(dateStr, "XX:") {
+			dateStr = strings.Replace(dateStr, "XX:", fmt.Sprintf("%02d", now.Hour())+":", 1)
+		}
+
+		if strings.Contains(dateStr, ":XX") {
+			dateStr = strings.Replace(dateStr, ":XX", ":"+fmt.Sprintf("%02d", now.Minute()), 1)
+		}
+	}
+
+	date, _ = time.ParseInLocation("2006-01-02 15:04", dateStr, timezone)
+
+	if date.Month() == time.February && date.Day() == 29 {
+		date = time.Date(date.Year()+1, time.March, 1, date.Hour(), date.Minute(), 0, 0, timezone)
+	}
+
+	return date
+}
+
 func processMarkdownFile(path string) error {
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -77,19 +123,11 @@ func processMarkdownFile(path string) error {
 		if matches := dateRegex.FindStringSubmatch(line); matches != nil {
 			dateStr := matches[1]
 
-			if !strings.Contains(dateStr, ":") {
-				remindTime := os.Getenv("REMIND_TIME")
+			if dateStr != "" {
+				now := time.Now().In(timezone)
+				date := getNextDate(dateStr, now)
 
-				if remindTime == "" {
-					remindTime = "09:00"
-				}
-
-				dateStr = dateStr + " " + remindTime
-			}
-
-			if date, err := time.ParseInLocation("2006-01-02 15:04", dateStr, timezone); err == nil {
-				now := time.Now()
-				if date.After(now.Add(-5*time.Minute)) && date.Before(time.Now().In(timezone)) {
+				if date.After(now.Add(-5*time.Minute)) && date.Before(now) {
 					log.Print("Found reminder in markdown with path: ", path)
 					sendTelegramReminder(date, line, path)
 				}
