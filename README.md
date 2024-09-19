@@ -5,7 +5,11 @@ This service must be running on a server or PC that will be running continuously
 
 You can also use this service for other programs that work with markdown files, such as Logseq.
 
+Currently, only the 24-hour format is supported.
+
 Tested on Windows and Linux.
+
+[Описание на русском языке](README-RU.md)
 
 ## How it's working
 
@@ -41,7 +45,7 @@ You can create an Obsidian note in your vault and set its path to this variable.
 Example template:
 
 ```text
-Obsidian reminder
+Obsidian Reminder
 
 File name: {{filename}}
 
